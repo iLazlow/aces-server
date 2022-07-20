@@ -5,5 +5,4 @@ services:
     restart: always
     command: npm run start:prod
     ports:
-      - "8705:80"
-      - "8706:443"
+      - "8705:443"
