@@ -1,0 +1,25 @@
+{
+  "name": "aces-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "keywords": [
+    "messenger",
+    "chat",
+    "aces"
+  ],
+  "author": "iLazlow",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "moment": "^2.29.4",
+    "sqlite3": "^5.0.9",
+    "ws": "^8.8.1"
+  }
+}
