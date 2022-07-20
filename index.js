@@ -83,4 +83,8 @@ app.post('/check', (req, res) => {
   res.send({status: "success", type: "CHECK", message: "Webserver check was successfully executed"});
 });
 
+app.get('/check', (req, res) => {
+  res.send({status: "success", type: "CHECK", message: "Webserver check was successfully executed"});
+});
+
 app.listen(PORT, () => console.log(`Aces Server listening on port ${PORT}!`));
