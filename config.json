@@ -1,4 +1,4 @@
 {
-    "name": "Aces Server",
+    "SERVER_NAME": "Aces Server",
     "PORT": 443
 }

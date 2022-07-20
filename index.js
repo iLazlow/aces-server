@@ -1,6 +1,6 @@
 const moment = require('moment');
 const sqlite3 = require('sqlite3')
-const { PORT } = require('./config.json');
+const { SERVER_NAME, PORT } = require('./config.json');
 const fs = require('fs');
 const cors = require("cors");
 const DAO = require('./dao');
@@ -52,7 +52,7 @@ app.ws('/', function(ws, req) {
       });
       if(i == 0){
         console.log("no client found. save in database for later");
-        dao.run('INSERT INTO message_queue (sender, recipient, content, created) VALUES (?, ?, ?, ?)', [json.sender, json.recipient, json.content, moment(new Date()).format('YYYY-MM-DD HH:mm:ss')]);
+        dao.run('INSERT INTO message_queue (sender, recipient, content, signature, created) VALUES (?, ?, ?, ?, ?)', [json.sender, json.recipient, json.content, json.signature, moment(new Date()).format('YYYY-MM-DD HH:mm:ss')]);
         //TODO: implement notifications
       }
     }else{
@@ -64,31 +64,23 @@ app.ws('/', function(ws, req) {
 });
 
 /* Server Endpoints */
-app.get("/", (req, res) => res.send("Aces Server is working!"));
+app.get("/", (req, res) => res.send(`${SERVER_NAME} is working!`));
 
 app.post('/checkin', (req, res) => {
   dao.get("SELECT * FROM accounts WHERE username LIKE '%" + req.body.username + "%'").then(result => {
     console.log(result);
     if(result == undefined){
-      res.send({status: "success", type: "CREATED", message: "Account with username " + req.body.username + " created"});
+      res.send({status: "success", type: "CREATED", serverName: SERVER_NAME, message: "Account with username " + req.body.username + " created"});
       dao.run('INSERT INTO accounts (username, password, created, key) VALUES (?, ?, ?, ?)', [req.body.username, req.body.password, moment(new Date()).format('YYYY-MM-DD HH:mm:ss'), req.body.public]);
     }else{
       if(result.password == req.body.password){
-        res.send({status: "success", type: "LOGIN", message: "Account with username " + req.body.username + " found"});
+        res.send({status: "success", type: "LOGIN", serverName: SERVER_NAME, message: "Account with username " + req.body.username + " found"});
         dao.run('UPDATE accounts SET key = ? WHERE id = ?', [req.body.public, result.id]);
       }else{
-        res.send({status: "error", type: "WRONG_CREDENTIALS", message: "Your username or password is invalid"});
+        res.send({status: "error", type: "WRONG_CREDENTIALS", serverName: SERVER_NAME, message: "Your username or password is invalid"});
       }
     }
   });
-});
-
-app.post('/check', (req, res) => {
-  res.send({status: "success", type: "CHECK", message: "Webserver check was successfully executed"});
-});
-
-app.get('/check', (req, res) => {
-  res.send({status: "success", type: "CHECK", message: "Webserver check was successfully executed"});
 });
 
 app.listen(PORT, () => console.log(`Aces Server listening on port ${PORT}!`));
