@@ -17,9 +17,8 @@ const wss = new WebSocketServer({port: WSS_PORT});
 wss.on('connection', function connection(ws, req) {
   const query = req.url.split('|')[1];
   ws.publicKey = query;
-  //go trough holded messages and send them to new client
+  
   dao.all("SELECT * FROM message_queue WHERE recipient = ? ORDER BY created ASC", [ws.publicKey]).then(result => {
-    //console.log(result);
     if(result.length > 0){
       console.log("found messages for " + ws.publicKey);
       result.forEach(function(msg) {
@@ -46,6 +45,7 @@ wss.on('connection', function connection(ws, req) {
       if(i == 0){
         console.log("no client found. save in database for later");
         dao.run('INSERT INTO message_queue (sender, recipient, content, created) VALUES (?, ?, ?, ?)', [json.sender, json.recipient, json.content, moment(new Date()).format('YYYY-MM-DD HH:mm:ss')]);
+        //TODO: implement notifications
       }
     }else{
       ws.send(JSON.stringify({type: "error", msg: "Unknown action"}));
@@ -59,15 +59,15 @@ wss.on('connection', function connection(ws, req) {
 app.get("/", (req, res) => res.send("Aces Server is working!"));
 
 app.post('/checkin', (req, res) => {
-  dao.get("SELECT * FROM accounts WHERE username = ?", [req.body.username]).then(result => {
+  dao.get("SELECT * FROM accounts WHERE username LIKE '%?%'", [req.body.username]).then(result => {
     console.log(result);
     if(result == undefined){
       res.send({status: "success", type: "CREATED", message: "Account with username " + req.body.username + " created"});
       dao.run('INSERT INTO accounts (username, password, created, key) VALUES (?, ?, ?, ?)', [req.body.username, req.body.password, moment(new Date()).format('YYYY-MM-DD HH:mm:ss'), req.body.public]);
     }else{
-      if(result.username == req.body.username && result.password == req.body.password){
+      if(result.password == req.body.password){
         res.send({status: "success", type: "LOGIN", message: "Account with username " + req.body.username + " found"});
-        dao.run('UPDATE accounts SET key = ? WHERE username = ?', [req.body.public, req.body.username]);
+        dao.run('UPDATE accounts SET key = ? WHERE id = ?', [req.body.public, result.id]);
       }else{
         res.send({status: "error", type: "WRONG_CREDENTIALS", message: "Your username or password is invalid"});
       }
