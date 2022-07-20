@@ -2,7 +2,6 @@ const moment = require('moment');
 const sqlite3 = require('sqlite3')
 const { PORT } = require('./config.json');
 const fs = require('fs');
-const cors = require("cors");
 const DAO = require('./dao');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -11,8 +10,11 @@ const app = express();
 const dao = new DAO('./main.db');
 const wss = require('express-ws')(app);
 
-app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '1mb'}));
+app.use(bodyParser.urlencoded({
+  extended: true,
+  limit: '1mb'
+}));
 app.use(function (req, res, next) {
   //console.log('middleware');
   //req.testing = 'testing';
