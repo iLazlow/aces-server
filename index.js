@@ -88,7 +88,7 @@ app.get('/search/:username', (req, res) => {
   dao.all("SELECT * FROM accounts WHERE username LIKE '%" + req.params.username + "%'").then(result => {
     var users = [];
     result.forEach(function(user) {
-      users.push({id: user.id, username: user.username, avatar: user.avatar, public: user.key});
+      users.push({id: user.id, username: user.username, avatar: user.avatar, publicKey: user.key});
     });
     res.send({status: "success", type: "SEARCH", users: users});
   });
@@ -97,7 +97,7 @@ app.get('/search/:username', (req, res) => {
 app.get('/user/:id', (req, res) => {
   dao.get("SELECT * FROM accounts WHERE id = '" + req.params.id + "'").then(result => {
     if(result != undefined){
-      res.send({status: "success", type: "USER_FOUND", user: {id: result.id, username: result.username, avatar: result.avatar, public: result.key}});
+      res.send({status: "success", type: "USER_FOUND", user: {id: result.id, username: result.username, avatar: result.avatar, publicKey: result.key}});
     }else{
       res.send({status: "error", type: "USER_NOT_FOUND", message: "There was no user found with this id."});
     }
