@@ -94,7 +94,7 @@ app.get('/search/:username', (req, res) => {
   });
 });
 
-app.get('/user/:id', (req, res) => {
+app.get('/user/byId/:id', (req, res) => {
   dao.get("SELECT * FROM accounts WHERE id = '" + req.params.id + "'").then(result => {
     if(result != undefined){
       res.send({status: "success", type: "USER_FOUND", user: {id: result.id, username:String( result.username), avatar: String(result.avatar), publicKey: String(result.key)}});
@@ -104,7 +104,7 @@ app.get('/user/:id', (req, res) => {
   });
 });
 
-app.get('/user/:username', (req, res) => {
+app.get('/user/byName/:username', (req, res) => {
   dao.get("SELECT * FROM accounts WHERE id = '" + req.params.username + "'").then(result => {
     if(result != undefined){
       res.send({status: "success", type: "USER_FOUND", user: {id: result.id, username:String( result.username), avatar: String(result.avatar), publicKey: String(result.key)}});
