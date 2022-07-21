@@ -6,6 +6,7 @@ const cors = require("cors");
 const DAO = require('./dao');
 const express = require('express');
 const bodyParser = require('body-parser');
+const { emitWarning } = require('process');
 
 const app = express();
 const dao = new DAO('./main.db');
@@ -80,6 +81,17 @@ app.post('/checkin', (req, res) => {
         res.send({status: "error", type: "WRONG_CREDENTIALS", serverName: SERVER_NAME, message: "Your username or password is invalid"});
       }
     }
+  });
+});
+
+app.get('/search/:username', (req, res) => {
+  console.log(req.params.username);
+  dao.all("SELECT * FROM accounts WHERE username LIKE '%" + req.params.username + "%'").then(result => {
+    var users = [];
+    result.forEach(function(user) {
+      users.push({id: user.id, username: user.username, public: user.key});
+    });
+    res.send({status: "success", type: "SEARCH", users: users});
   });
 });
 
