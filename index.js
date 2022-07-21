@@ -105,7 +105,7 @@ app.get('/user/byId/:id', (req, res) => {
 });
 
 app.get('/user/byName/:username', (req, res) => {
-  dao.get("SELECT * FROM accounts WHERE id = '" + req.params.username + "'").then(result => {
+  dao.get("SELECT * FROM accounts WHERE username = '" + req.params.username + "'").then(result => {
     if(result != undefined){
       res.send({status: "success", type: "USER_FOUND", user: {id: result.id, username:String( result.username), avatar: String(result.avatar), publicKey: String(result.key)}});
     }else{
