@@ -25,20 +25,23 @@ app.use(function (req, res, next) {
 });
 
 app.ws('/', function(ws, req) {
-  ws.publicKey = req.query.pub;
-  
-  dao.all("SELECT * FROM message_queue WHERE recipient = ? ORDER BY created ASC", [ws.publicKey]).then(result => {
-    if(result.length > 0){
-      console.log("found messages for " + ws.publicKey);
-      result.forEach(function(msg) {
-        console.log("send msg " + msg.id);
-        ws.send(JSON.stringify({type: "message", msg: msg.content, created: msg.created}));
-        dao.run('DELETE FROM message_queue WHERE id = ?', [msg.id]);
+  ws.user = req.query.user;
+  ws.hash = req.query.hash;
+  dao.get("SELECT * FROM accounts WHERE username LIKE '%" + req.body.username + "%'").then(result => {
+    if(result != undefined && result.password == req.query.hash){
+      dao.all("SELECT * FROM message_queue WHERE recipient = ? ORDER BY created ASC", [ws.user]).then(result => {
+        if(result.length > 0){
+          console.log("found messages for " + ws.user);
+          result.forEach(function(msg) {
+            console.log("send msg " + msg.id);
+            ws.send(JSON.stringify({type: "message", msg: {message_uuid: json.message_uuid, sender: json.sender, recipient: json.recipient, content: json.content, signature: json.signature, created: json.created}}));
+            dao.run('DELETE FROM message_queue WHERE id = ?', [msg.id]);
+          });
+        }
       });
     }
   });
-
-
+  
   ws.on('message', function message(data) {
     const json = JSON.parse(data);
 
@@ -46,14 +49,14 @@ app.ws('/', function(ws, req) {
       console.log(`send message from ${json.sender} to ${json.recipient}`);
       var i = 0;
       wss.getWss().clients.forEach(function(client) {
-        if(client.publicKey == json.recipient){
-          client.send(JSON.stringify({type: "message", msg: json.content, created: moment(new Date()).format('YYYY-MM-DD HH:mm:ss')}));
+        if(client.user == json.recipient){
+          client.send(JSON.stringify({type: "message", msg: {message_uuid: json.message_uuid, sender: json.sender, recipient: json.recipient, content: json.content, signature: json.signature, created: json.created}}));
           i++;
         }
       });
       if(i == 0){
         console.log("no client found. save in database for later");
-        dao.run('INSERT INTO message_queue (sender, recipient, content, signature, created) VALUES (?, ?, ?, ?, ?)', [json.sender, json.recipient, json.content, json.signature, moment(new Date()).format('YYYY-MM-DD HH:mm:ss')]);
+        dao.run('INSERT INTO message_queue (message_uuid, sender, recipient, content, signature, created) VALUES (?, ?, ?, ?, ?, ?)', [json.message_uuid, json.sender, json.recipient, json.content, json.signature, moment(new Date()).format('YYYY-MM-DD HH:mm:ss')]);
         //TODO: implement notifications
       }
     }else{
@@ -61,7 +64,7 @@ app.ws('/', function(ws, req) {
     }
   });
 
-  ws.send(JSON.stringify({type: "connected", key: ws.publicKey}));
+  ws.send(JSON.stringify({type: "connected", key: ws.user}));
 });
 
 /* Server Endpoints */
