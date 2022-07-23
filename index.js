@@ -34,7 +34,7 @@ app.ws('/', function(ws, req) {
           console.log("found messages for " + ws.user);
           result.forEach(function(msg) {
             console.log("send msg " + msg.id);
-            ws.send(JSON.stringify({type: "message", msg: {message_uuid: json.message_uuid, sender: json.sender, recipient: json.recipient, content: json.content, signature: json.signature, created: json.created}}));
+            ws.send(JSON.stringify({type: "message", msg: {message_uuid: msg.message_uuid, sender: msg.sender, recipient: msg.recipient, content: msg.content, signature: msg.signature, created: msg.created}}));
             dao.run('DELETE FROM message_queue WHERE id = ?', [msg.id]);
           });
         }
