@@ -28,8 +28,12 @@ app.ws('/', function(ws, req) {
   ws.user = req.query.user;
   ws.hash = req.query.hash;
   dao.get("SELECT * FROM accounts WHERE username LIKE '%" + req.body.username + "%'").then(result => {
+    console.log("SELECT * FROM accounts WHERE username LIKE '%" + req.body.username + "%'");
+    console.log(result);
     if(result != undefined && result.password == req.query.hash){
+      console.log(result + " != undefined &&  " + result.password + " == " + req.query.hash);
       dao.all("SELECT * FROM message_queue WHERE recipient = ? ORDER BY created ASC", [ws.user]).then(result => {
+        console.log(result.length);
         if(result.length > 0){
           console.log("found messages for " + ws.user);
           result.forEach(function(msg) {
