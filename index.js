@@ -59,6 +59,14 @@ app.ws('/', function(ws, req) {
         dao.run('INSERT INTO message_queue (message_uuid, sender, recipient, content, signature, created) VALUES (?, ?, ?, ?, ?, ?)', [json.message_uuid, json.sender, json.recipient, json.content, json.signature, moment(new Date()).format('YYYY-MM-DD HH:mm:ss')]);
         //TODO: implement notifications
       }
+    }else if(json.type == "mark_read"){
+      wss.getWss().clients.forEach(function(client) {
+        if(client.user == json.recipient){
+          console.log(`mark message ${json.message_uuid} as read`);
+          client.send(JSON.stringify({type: "mark_read", message_uuid: json.message_uuid, sender: json.sender, recipient: json.recipient}));
+          i++;
+        }
+      });
     }else{
       ws.send(JSON.stringify({type: "error", msg: "Unknown action"}));
     }
