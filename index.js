@@ -60,7 +60,7 @@ app.ws('/', function(ws, req) {
       });
       if(i == 0){
         console.log("no client found. save in database for later");
-        dao.run('INSERT INTO message_queue (message_uuid, sender, recipient, content, signature, created) VALUES (?, ?, ?, ?, ?, ?)', [json.message_uuid, json.sender, json.recipient, json.content, json.signature, moment(new Date()).format('YYYY-MM-DD HH:mm:ss')]);
+        dao.run('INSERT INTO message_queue (message_uuid, sender, recipient, content, signature, created) VALUES (?, ?, ?, ?, ?, ?)', [json.message_uuid, json.sender, json.recipient, json.content, json.signature, json.created]);
         //TODO: implement notifications
       }
     }else if(json.type == "mark_read"){
