@@ -65,7 +65,7 @@ app.ws('/', function(ws, req) {
       }
     }else if(json.type == "mark_read"){
       wss.getWss().clients.forEach(function(client) {
-        if(client.user == json.recipient){
+        if(client.user == json.sender){
           console.log(`mark message ${json.message_uuid} as read`);
           client.send(JSON.stringify({type: "mark_read", message_uuid: json.message_uuid, sender: json.sender, recipient: json.recipient}));
           i++;
