@@ -15,8 +15,10 @@ const { emitWarning } = require('process');
 const app = express();
 const dao = new DAO('./main.db');
 const wss = require('express-ws')(app);
+const storage = multer.memoryStorage()
 const upload = multer({
-  dest: "./avatar/"
+  dest: "./avatar/",
+  storage: storage
 });
 
 app.use(cors());
@@ -119,7 +121,7 @@ app.post('/checkin', (req, res) => {
 });
 
 app.post('/upload/avatar', upload.single("files"), (req, res, next) => {
-  dao.get("SELECT * FROM accounts WHERE username LIKE '%" + req.query.user + "%'").then(result => {
+  dao.get("SELECT * FROM accounts WHERE username LIKE '%" + req.query.user + "%'").then(async result => {
     if(result == undefined){
       res.send({status: "error", type: "USER_NOT_FOUND", message: "Account with username " + req.query.user + " was not found"});
     }else{
@@ -141,16 +143,11 @@ app.post('/upload/avatar', upload.single("files"), (req, res, next) => {
         let filename = crypto.createHash('md5').update(`${result.username}:${Math.floor(new Date().getTime()/1000)}`).digest('hex');
         let extension = ".webp"; //path.extname(req.file.originalname).toLowerCase();
         let avatar_path = `/avatar/${filename}${extension}`;
-        fs.rename(req.file.path, `.${avatar_path}`, async (err) => {
-          if(err){
-            fs.unlink(`${req.file.path}`, () => {});
-          }
-          await sharp(req.file.buffer).webp({ quality: 20 }).toFile(`.${avatar_path}`);
-
-          //console.log(`${req.file.originalname} was saved as ${filename}${extension}`);
-          dao.run('UPDATE accounts SET avatar = ? WHERE id = ?', [avatar_path, result.id]);
-          res.send({status: "success", type: "UPLOAD", message: "Avatar was uploaded successfully"});
-        });
+        
+        await sharp(req.file.buffer).webp({ quality: 20 }).toFile(`.${avatar_path}`);
+        fs.unlink(`${req.file.path}`, () => {});
+        dao.run('UPDATE accounts SET avatar = ? WHERE id = ?', [avatar_path, result.id]);
+        res.send({status: "success", type: "UPLOAD", message: "Avatar was uploaded successfully"});
       }else{
         res.send({status: "error", type: "WRONG_CREDENTIALS", message: "Your username or password is invalid"});
       }
