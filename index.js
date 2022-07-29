@@ -118,7 +118,7 @@ app.post('/checkin', (req, res) => {
   });
 });
 
-app.post('/upload/avatar', upload.single("files"), async (req, res, next) => {
+app.post('/upload/avatar', upload.single("files"), (req, res, next) => {
   dao.get("SELECT * FROM accounts WHERE username LIKE '%" + req.query.user + "%'").then(result => {
     if(result == undefined){
       res.send({status: "error", type: "USER_NOT_FOUND", message: "Account with username " + req.query.user + " was not found"});
@@ -141,7 +141,7 @@ app.post('/upload/avatar', upload.single("files"), async (req, res, next) => {
         let filename = crypto.createHash('md5').update(`${result.username}:${Math.floor(new Date().getTime()/1000)}`).digest('hex');
         let extension = ".webp"; //path.extname(req.file.originalname).toLowerCase();
         let avatar_path = `/avatar/${filename}${extension}`;
-        fs.rename(req.file.path, `.${avatar_path}`, (err) => {
+        fs.rename(req.file.path, `.${avatar_path}`, async (err) => {
           if(err){
             fs.unlink(`${req.file.path}`, () => {});
           }
