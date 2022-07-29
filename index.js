@@ -117,7 +117,7 @@ app.post('/checkin', (req, res) => {
   });
 });
 
-app.post('/upload', upload.single("files"), (req, res, next) => {
+app.post('/upload/avatar', upload.single("files"), (req, res, next) => {
   dao.get("SELECT * FROM accounts WHERE username LIKE '%" + req.query.user + "%'").then(result => {
     if(result == undefined){
       res.send({status: "error", type: "USER_NOT_FOUND", message: "Account with username " + req.query.user + " was not found"});
