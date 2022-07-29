@@ -68,9 +68,20 @@ app.ws('/', function(ws, req) {
         if(client.user == json.sender){
           console.log(`mark message ${json.message_uuid} as read`);
           client.send(JSON.stringify({type: "mark_read", message_uuid: json.message_uuid, sender: json.sender, recipient: json.recipient}));
+        }
+      });
+    }else if(json.type == "online_status"){
+      var i = 0;
+      wss.getWss().clients.forEach(function(client) {
+        if(client.user == json.user){
+          console.log(`${json.user} is connected`);
+          client.send(JSON.stringify({type: "online_status", online: true, user: json.user}));
           i++;
         }
       });
+      if(i == 0){
+        client.send(JSON.stringify({type: "online_status", online: false, user: json.user}));
+      }
     }else{
       ws.send(JSON.stringify({type: "error", msg: "Unknown action"}));
     }
