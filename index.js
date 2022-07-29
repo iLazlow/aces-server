@@ -75,12 +75,12 @@ app.ws('/', function(ws, req) {
       wss.getWss().clients.forEach(function(client) {
         if(client.user == json.user){
           console.log(`${json.user} is connected`);
-          client.send(JSON.stringify({type: "online_status", online: true, user: json.user}));
+          ws.send(JSON.stringify({type: "online_status", online: true, user: json.user}));
           i++;
         }
       });
       if(i == 0){
-        client.send(JSON.stringify({type: "online_status", online: false, user: json.user}));
+        ws.send(JSON.stringify({type: "online_status", online: false, user: json.user}));
       }
     }else{
       ws.send(JSON.stringify({type: "error", msg: "Unknown action"}));
