@@ -4,6 +4,9 @@ const { SERVER_NAME, PORT } = require('./config.json');
 const fs = require('fs');
 const cors = require("cors");
 const DAO = require('./dao');
+const path = require("path");
+const crypto = require('crypto');
+const multer = require("multer");
 const express = require('express');
 const bodyParser = require('body-parser');
 const { emitWarning } = require('process');
@@ -11,18 +14,22 @@ const { emitWarning } = require('process');
 const app = express();
 const dao = new DAO('./main.db');
 const wss = require('express-ws')(app);
+const upload = multer({
+  dest: "./avatar/"
+});
 
 app.use(cors());
-app.use(bodyParser.json({limit: '1mb'}));
+app.use(bodyParser.json({limit: '100mb'}));
 app.use(bodyParser.urlencoded({
   extended: true,
-  limit: '1mb'
+  limit: '100mb'
 }));
 app.use(function (req, res, next) {
   //console.log('middleware');
   //req.testing = 'testing';
   return next();
 });
+
 
 app.ws('/', function(ws, req) {
   ws.user = req.query.user;
@@ -106,6 +113,53 @@ app.post('/checkin', (req, res) => {
       }else{
         res.send({status: "error", type: "WRONG_CREDENTIALS", serverName: SERVER_NAME, message: "Your username or password is invalid"});
       }
+    }
+  });
+});
+
+app.post('/upload', upload.single("files"), (req, res, next) => {
+  dao.get("SELECT * FROM accounts WHERE username LIKE '%" + req.query.user + "%'").then(result => {
+    if(result == undefined){
+      res.send({status: "error", type: "USER_NOT_FOUND", message: "Account with username " + req.query.user + " was not found"});
+    }else{
+      if(result.password == req.query.hash){
+        //console.log(req.file);
+        
+        //remove old avatar if exists
+        if(result.avatar != null && result.avatar != undefined && result.avatar != ""){
+          //console.log(result.avatar);
+          //console.log("old avatar found. remove");
+          fs.unlink(`.${result.avatar}`, (err) => {
+            if(err){
+              fs.unlink(`${req.file.path}`, () => {});
+            }
+            //console.log('successfully deleted ' + result.avatar);
+          });
+        }
+
+        let filename = crypto.createHash('md5').update(`${result.username}:${Math.floor(new Date().getTime()/1000)}`).digest('hex');
+        let extension = path.extname(req.file.originalname).toLowerCase();
+        let avatar_path = `/avatar/${filename}${extension}`;
+        fs.rename(req.file.path, `.${avatar_path}`, (err) => {
+          if(err){
+            fs.unlink(`${req.file.path}`, () => {});
+          }
+
+          //console.log(`${req.file.originalname} was saved as ${filename}${extension}`);
+          dao.run('UPDATE accounts SET avatar = ? WHERE id = ?', [avatar_path, result.id]);
+          res.send({status: "success", type: "UPLOAD", message: "Avatar was uploaded successfully"});
+        });
+      }else{
+        res.send({status: "error", type: "WRONG_CREDENTIALS", message: "Your username or password is invalid"});
+      }
+    }
+  });
+});
+
+app.get('/avatar/:filename', (req, res) => {
+  res.sendFile(`${__dirname}/avatar/${req.params.filename}`, (err) => {
+    if (err) {
+      res.send({status: "error", type: "FILE_NOT_FOUND", message: "The file was not found"});
     }
   });
 });
