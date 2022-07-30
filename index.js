@@ -108,11 +108,11 @@ app.post('/checkin', (req, res) => {
     console.log(result);
     if(result == undefined){
       res.send({status: "success", type: "CREATED", serverName: SERVER_NAME, message: "Account with username " + req.body.username + " created"});
-      dao.run('INSERT INTO accounts (username, password, created, key) VALUES (?, ?, ?, ?)', [req.body.username, req.body.password, moment(new Date()).format('YYYY-MM-DD HH:mm:ss'), req.body.public]);
+      dao.run('INSERT INTO accounts (username, password, created, key, fcm_token) VALUES (?, ?, ?, ?, ?)', [req.body.username, req.body.password, moment(new Date()).format('YYYY-MM-DD HH:mm:ss'), req.body.public, req.body.fcm]);
     }else{
       if(result.password == req.body.password){
         res.send({status: "success", type: "LOGIN", serverName: SERVER_NAME, message: "Account with username " + req.body.username + " found"});
-        dao.run('UPDATE accounts SET key = ? WHERE id = ?', [req.body.public, result.id]);
+        dao.run('UPDATE accounts SET key = ?, fcm_token = ? WHERE id = ?', [req.body.public, req.body.fcm, result.id]);
       }else{
         res.send({status: "error", type: "WRONG_CREDENTIALS", serverName: SERVER_NAME, message: "Your username or password is invalid"});
       }
