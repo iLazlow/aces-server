@@ -5,6 +5,7 @@ const fs = require('fs');
 const cors = require("cors");
 const DAO = require('./dao');
 const path = require("path");
+const axios = require("axios");
 const sharp = require("sharp");
 const crypto = require('crypto');
 const multer = require("multer");
