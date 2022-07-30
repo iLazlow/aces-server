@@ -72,6 +72,24 @@ app.ws('/', function(ws, req) {
         console.log("no client found. save in database for later");
         dao.run('INSERT INTO message_queue (message_uuid, sender, recipient, content, signature, created) VALUES (?, ?, ?, ?, ?, ?)', [json.message_uuid, json.sender, json.recipient, json.content, json.signature, json.created]);
         //TODO: implement notifications
+        dao.get(`SELECT * FROM accounts WHERE username = '${json.recipient}'`).then(result => {
+          if(result != undefined){
+            axios({
+              method: 'POST',
+              url: 'https://gateway.aces.ilazlow.de/notification', 
+              data: JSON.stringify({
+                token: result.fcm_token, 
+                title: json.sender,
+                body: json.content
+              }), 
+              headers:{'Content-Type': 'application/json; charset=utf-8'}
+            }).then(() => {
+              console.log(`message was send to: ${json.recipient}`);
+            }).catch((error) => {
+              console.log(`Could not send message to device: ${error}`);
+            });
+          }
+        });
       }
     }else if(json.type == "mark_read"){
       wss.getWss().clients.forEach(function(client) {
