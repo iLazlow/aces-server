@@ -61,7 +61,7 @@ app.ws('/', function(ws, req) {
           console.log("found read markings for " + ws.user);
           result.forEach(function(msgRead) {
             console.log("send message read mark " + msgRead.id);
-            ws.send(JSON.stringify({type: "mark_read", message_uuid: msgRead.uuid, sender: msgRead.sender, recipient: msgRead.recipient}));
+            ws.send(JSON.stringify({type: "mark_read", message_uuid: msgRead.message_uuid, sender: msgRead.sender, recipient: msgRead.recipient}));
             dao.run('DELETE FROM message_read_queue WHERE id = ?', [msgRead.id]);
           });
         }
@@ -116,10 +116,10 @@ app.ws('/', function(ws, req) {
       if(i == 0){
         dao.get(`SELECT * FROM message_read_queue WHERE uuid = '${json.message_uuid}'`).then(result => {
           console.log(result);
-          console.log(result.length);
+          //console.log(result.length);
           if(result == undefined){
             console.log("no client found. save mark read in database for later");
-            dao.run('INSERT INTO message_read_queue (uuid, sender, recipient) VALUES (?, ?, ?)', [json.message_uuid, json.sender, json.recipient]);
+            dao.run('INSERT INTO message_read_queue (message_uuid, sender, recipient) VALUES (?, ?, ?)', [json.message_uuid, json.sender, json.recipient]);
           }
         });
       }
