@@ -168,7 +168,7 @@ app.post('/checkin', (req, res) => {
 });
 
 app.post('/upload/avatar', upload.single("files"), (req, res, next) => {
-  dao.get("SELECT * FROM accounts WHERE username LIKE '%" + req.query.user + "%'").then(async result => {
+  dao.get(`SELECT * FROM accounts WHERE LOWER(username) = '${req.body.username.toLowerCase()}'`).then(async result => {
     if(result == undefined){
       res.send({status: "error", type: "USER_NOT_FOUND", message: "Account with username " + req.query.user + " was not found"});
     }else{
@@ -211,13 +211,23 @@ app.get('/avatar/:filename', (req, res) => {
 });
 
 app.get('/search/:username', (req, res) => {
-  dao.all("SELECT * FROM accounts WHERE username LIKE '%" + req.params.username + "%'").then(result => {
-    var users = [];
-    result.forEach(function(user) {
-      users.push({id: user.id, username: String(user.username), avatar: String(user.avatar), publicKey: String(user.key)});
+  if(req.params.username == "all"){
+    dao.all("SELECT * FROM accounts").then(result => {
+      var users = [];
+      result.forEach(function(user) {
+        users.push({id: user.id, username: String(user.username), avatar: String(user.avatar), publicKey: String(user.key)});
+      });
+      res.send({status: "success", type: "SEARCH", users: users});
     });
-    res.send({status: "success", type: "SEARCH", users: users});
-  });
+  }else{
+    dao.all("SELECT * FROM accounts WHERE username LIKE '%" + req.params.username + "%'").then(result => {
+      var users = [];
+      result.forEach(function(user) {
+        users.push({id: user.id, username: String(user.username), avatar: String(user.avatar), publicKey: String(user.key)});
+      });
+      res.send({status: "success", type: "SEARCH", users: users});
+    });
+  }
 });
 
 app.get('/user/byId/:id', (req, res) => {
