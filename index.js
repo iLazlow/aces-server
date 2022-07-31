@@ -53,8 +53,8 @@ app.ws('/', function(ws, req) {
       });
 
       //send message read from queue to user
+      console.log("SELECT * FROM message_read_queue WHERE recipient = '" + ws.user + "' ORDER BY id ASC");
       dao.all("SELECT * FROM message_read_queue WHERE recipient = ? ORDER BY id ASC", [ws.user]).then(result => {
-        console.log("SELECT * FROM message_read_queue WHERE recipient = '" + ws.user + "' ORDER BY id ASC");
         console.log(result);
         console.log(result.length);
         if(result.length > 0){
@@ -115,6 +115,8 @@ app.ws('/', function(ws, req) {
       });
       if(i == 0){
         dao.get(`SELECT * FROM message_read_queue WHERE uuid = '${json.message_uuid}'`).then(result => {
+          console.log(result);
+          console.log(result.length);
           if(result == undefined){
             console.log("no client found. save mark read in database for later");
             dao.run('INSERT INTO message_read_queue (uuid, sender, recipient) VALUES (?, ?, ?)', [json.message_uuid, json.sender, json.recipient]);
