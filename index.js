@@ -114,7 +114,7 @@ app.ws('/', function(ws, req) {
         }
       });
       if(i == 0){
-        dao.get(`SELECT * FROM message_read_queue WHERE uuid = '${json.message_uuid}'`).then(result => {
+        dao.get(`SELECT * FROM message_read_queue WHERE message_uuid = '${json.message_uuid}'`).then(result => {
           console.log(result);
           //console.log(result.length);
           if(result == undefined){
