@@ -54,7 +54,9 @@ app.ws('/', function(ws, req) {
 
       //send message read from queue to user
       dao.all("SELECT * FROM message_read_queue WHERE recipient = ? ORDER BY id ASC", [ws.user]).then(result => {
-        //console.log(result.length);
+        console.log("SELECT * FROM message_read_queue WHERE recipient = '" + ws.user + "' ORDER BY id ASC");
+        console.log(result);
+        console.log(result.length);
         if(result.length > 0){
           console.log("found read markings for " + ws.user);
           result.forEach(function(msgRead) {
