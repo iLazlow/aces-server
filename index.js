@@ -168,7 +168,7 @@ app.post('/checkin', (req, res) => {
 });
 
 app.post('/upload/avatar', upload.single("files"), (req, res, next) => {
-  dao.get(`SELECT * FROM accounts WHERE LOWER(username) = '${req.body.username.toLowerCase()}'`).then(async result => {
+  dao.get(`SELECT * FROM accounts WHERE LOWER(username) = '${req.query.user.toLowerCase()}'`).then(async result => {
     if(result == undefined){
       res.send({status: "error", type: "USER_NOT_FOUND", message: "Account with username " + req.query.user + " was not found"});
     }else{
