@@ -38,7 +38,7 @@ app.use(function (req, res, next) {
 app.ws('/', function(ws, req) {
   ws.user = req.query.user;
   ws.hash = req.query.hash;
-  dao.get("SELECT * FROM accounts WHERE username LIKE '%" + ws.user + "%'").then(result => {
+  dao.get(`SELECT * FROM accounts WHERE username = '${ws.user}'`).then(result => {
     if(result != undefined && result.password == ws.hash){
       //send messages from queue to user
       dao.all("SELECT * FROM message_queue WHERE recipient = ? ORDER BY created ASC", [ws.user]).then(result => {
@@ -108,12 +108,13 @@ app.ws('/', function(ws, req) {
         if(client.user == json.sender){
           console.log(`mark message ${json.message_uuid} as read`);
           client.send(JSON.stringify({type: "mark_read", message_uuid: json.message_uuid, sender: json.sender, recipient: json.recipient}));
+          i++;
         }
       });
       if(i == 0){
         dao.get(`SELECT * FROM message_read_queue WHERE uuid = '${json.message_uuid}'`).then(result => {
           if(result == undefined){
-            console.log("no client found. save in mark read in database for later");
+            console.log("no client found. save mark read in database for later");
             dao.run('INSERT INTO message_read_queue (uuid, sender, recipient) VALUES (?, ?, ?)', [json.message_uuid, json.sender, json.recipient]);
           }
         });
