@@ -39,18 +39,28 @@ app.ws('/', function(ws, req) {
   ws.user = req.query.user;
   ws.hash = req.query.hash;
   dao.get("SELECT * FROM accounts WHERE username LIKE '%" + ws.user + "%'").then(result => {
-    //console.log("SELECT * FROM accounts WHERE username LIKE '%" + ws.user + "%'");
-    //console.log(result);
     if(result != undefined && result.password == ws.hash){
-      //console.log(result + " != undefined &&  " + result.password + " == " + ws.hash);
+      //send messages from queue to user
       dao.all("SELECT * FROM message_queue WHERE recipient = ? ORDER BY created ASC", [ws.user]).then(result => {
-        //console.log(result.length);
         if(result.length > 0){
           console.log("found messages for " + ws.user);
           result.forEach(function(msg) {
             console.log("send msg " + msg.id);
             ws.send(JSON.stringify({type: "message", msg: {message_uuid: msg.message_uuid, sender: msg.sender, recipient: msg.recipient, content: msg.content, signature: msg.signature, created: msg.created}}));
             dao.run('DELETE FROM message_queue WHERE id = ?', [msg.id]);
+          });
+        }
+      });
+
+      //send message read from queue to user
+      dao.all("SELECT * FROM message_read_queue WHERE recipient = ? ORDER BY id ASC", [ws.user]).then(result => {
+        //console.log(result.length);
+        if(result.length > 0){
+          console.log("found read markings for " + ws.user);
+          result.forEach(function(msgRead) {
+            console.log("send message read mark " + msgRead.id);
+            ws.send(JSON.stringify({type: "mark_read", message_uuid: msgRead.uuid, sender: msgRead.sender, recipient: msgRead.recipient}));
+            dao.run('DELETE FROM message_read_queue WHERE id = ?', [msgRead.id]);
           });
         }
       });
@@ -93,12 +103,21 @@ app.ws('/', function(ws, req) {
         });
       }
     }else if(json.type == "mark_read"){
+      var i = 0;
       wss.getWss().clients.forEach(function(client) {
         if(client.user == json.sender){
           console.log(`mark message ${json.message_uuid} as read`);
           client.send(JSON.stringify({type: "mark_read", message_uuid: json.message_uuid, sender: json.sender, recipient: json.recipient}));
         }
       });
+      if(i == 0){
+        dao.get(`SELECT * FROM message_read_queue WHERE uuid = '${json.message_uuid}'`).then(result => {
+          if(result == undefined){
+            console.log("no client found. save in mark read in database for later");
+            dao.run('INSERT INTO message_read_queue (uuid, sender, recipient) VALUES (?, ?, ?)', [json.message_uuid, json.sender, json.recipient]);
+          }
+        });
+      }
     }else if(json.type == "online_status"){
       var i = 0;
       wss.getWss().clients.forEach(function(client) {
