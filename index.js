@@ -147,7 +147,7 @@ app.ws('/', function(ws, req) {
 app.get("/", (req, res) => res.send(`${SERVER_NAME} is working!`));
 
 app.post('/checkin', (req, res) => {
-  dao.get("SELECT * FROM accounts WHERE username LIKE '%" + req.body.username + "%'").then(result => {
+  dao.get(`SELECT * FROM accounts WHERE LOWER(username) = '${req.body.username.toLowerCase()}'`).then(result => {
     console.log(result);
     if(result == undefined){
       res.send({status: "success", type: "CREATED", serverName: SERVER_NAME, message: "Account with username " + req.body.username + " created"});
