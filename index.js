@@ -119,7 +119,11 @@ app.ws('/', function(ws, req) {
           //console.log(result.length);
           if(result == undefined){
             console.log("no client found. save mark read in database for later");
-            dao.run('INSERT INTO message_read_queue (message_uuid, sender, recipient) VALUES (?, ?, ?)', [json.message_uuid, json.sender, json.recipient]);
+            dao.run('INSERT INTO message_read_queue (message_uuid, sender, recipient) VALUES (?, ?, ?)', [json.message_uuid, json.sender, json.recipient]).then(() => {
+              console.log(`message read marking was saved`);
+            }).catch((error) => {
+              console.log(`Could not save read marking: ${error}`);
+            });;
           }
         });
       }
